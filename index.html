@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معجم التبصرة في اللغة</title>
+    
+    <!-- Mengambil Font Arab dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Script untuk membaca file CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style>
+        body { 
+            background-color: #ffffff; 
+            color: #333333; 
+            font-family: 'Tajawal', sans-serif; 
+            padding: 20px; 
+            max-width: 1100px; 
+            margin: auto; 
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #8B7355; 
+        }
+        
+        h1 { 
+            font-family: 'Amiri', serif; 
+            color: #4A3B32; 
+            font-size: 42px;
+            margin-bottom: 5px;
+        }
+        
+        h2 {
+            font-family: 'Amiri', serif;
+            color: #665440;
+            font-size: 24px;
+            font-weight: normal;
+            margin-top: 0;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 18px; 
+            font-size: 20px; 
+            font-family: 'Tajawal', sans-serif;
+            margin-bottom: 25px; 
+            border: 2px solid #8B7355; 
+            border-radius: 8px; 
+            box-sizing: border-box;
+            background-color: #FAFAFA;
+            transition: 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #4A3B32;
+            box-shadow: 0 0 8px rgba(74, 59, 50, 0.3);
+        }
+
+        .table-responsive {
+            overflow-x: auto; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #ffffff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+        }
+        
+        th, td { 
+            padding: 15px 12px; 
+            border: 1px solid #E0E0E0; 
+            text-align: center; 
+            vertical-align: middle;
+            font-size: 18px;
+        }
+        
+        th { 
+            background-color: #4A3B32; 
+            color: #ffffff; 
+            font-weight: 700;
+            font-size: 20px;
+            white-space: nowrap; 
+        }
+        
+        tr:nth-child(even) { 
+            background-color: #F9F8F6; 
+        }
+        
+        tr:hover {
+            background-color: #F0EBE1; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>معجم التبصرة في اللغة</h1>
+        <h2>لدارسي الكتاب العربية بين يديك</h2>
+    </div>
+
+    <!-- Kotak pencarian -->
+    <input type="text" id="searchInput" placeholder="ابحث عن الكلمة هنا (بدون حركات)..." onkeyup="searchKamus()">
+
+    <!-- Wadah tabel -->
+    <div class="table-responsive">
+        <table id="resultTable">
+            <thead>
+                <tr id="tableHeader"></tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Hasil akan muncul di sini otomatis -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let kamusData = [];
+        let headers = [];
+
+        // Membaca file tabshirah.csv
+        Papa.parse("tabshirah.csv", {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                kamusData = results.data;
+                headers = results.meta.fields;
+
+                let headerRow = document.getElementById("tableHeader");
+                headers.forEach(header => {
+                    if(header) {
+                        let th = document.createElement("th");
+                        th.innerText = header;
+                        headerRow.appendChild(th);
+                    }
+                });
+            }
+        });
+
+        // Menghapus harakat dan menyamakan huruf Arab
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return text.toString()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u065F]/g, ''); 
+        }
+
+        function searchKamus() {
+            let input = normalizeArabic(document.getElementById("searchInput").value.trim());
+            let tbody = document.getElementById("tableBody");
+            tbody.innerHTML = ""; 
+
+            if (input.length === 0) return; 
+
+            let results = kamusData.filter(row => {
+                // headers[0] adalah kolom paling kanan (kosakata yang dicari)
+                let kataArab = normalizeArabic(row[headers[0]]); 
+                return kataArab.includes(input);
+            });
+
+            // Menampilkan 6 kolom yang sejajar
+            results.forEach(row => {
+                let tr = document.createElement("tr");
+                headers.forEach(header => {
+                    if(header) {
+                        let td = document.createElement("td");
+                        td.innerText = row[header] || "-"; 
+                        tr.appendChild(td);
+                    }
+                });
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
